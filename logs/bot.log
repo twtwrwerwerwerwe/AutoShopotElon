@@ -1,0 +1,165 @@
+2026-06-15 10:26:24 | INFO     | __main__ | 🚀 AutoAd Bot ishga tushmoqda...
+2026-06-15 10:26:24 | INFO     | app.database | Database initialized successfully.
+2026-06-15 10:26:24 | INFO     | __main__ | ✅ Ma'lumotlar bazasi tayyor.
+2026-06-15 10:26:24 | INFO     | __main__ | ✅ Fon vazifalar ishga tushdi.
+2026-06-15 10:26:24 | INFO     | __main__ | ✅ Bot ishlamoqda. To'xtatish uchun Ctrl+C bosing.
+2026-06-15 10:26:24 | INFO     | aiogram.dispatcher | Start polling
+2026-06-15 10:26:24 | INFO     | aiogram.dispatcher | Run polling for bot @habarchiTaxi_bot id=8630135525 - 'AUTO ELON BOT'
+2026-06-15 10:26:25 | INFO     | aiogram.event | Update id=868602173 is not handled. Duration 31 ms by bot id=8630135525
+2026-06-15 10:26:25 | ERROR    | aiogram.event | Cause exception while process update id=868602173 by bot id=8630135525
+IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: users.telegram_id
+[SQL: INSERT INTO users (telegram_id, username, full_name, is_admin, is_banned, is_active, created_at, phone_number, session_string) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: (8946105454, 'akramjonov7777', 'Akramjonov', 1, 0, 0, '2026-06-15 05:26:25.115377', None, None)]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+Traceback (most recent call last):
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\default.py", line 941, in do_execute
+    cursor.execute(statement, parameters)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\dialects\sqlite\aiosqlite.py", line 147, in execute
+    self._adapt_connection._handle_exception(error)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\dialects\sqlite\aiosqlite.py", line 298, in _handle_exception
+    raise error
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\dialects\sqlite\aiosqlite.py", line 129, in execute
+    self.await_(_cursor.execute(operation, parameters))
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiosqlite\cursor.py", line 48, in execute
+    await self._execute(self._cursor.execute, sql, parameters)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiosqlite\cursor.py", line 40, in _execute
+    return await self._conn._execute(fn, *args, **kwargs)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiosqlite\core.py", line 132, in _execute
+    return await future
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiosqlite\core.py", line 115, in run
+    result = function()
+sqlite3.IntegrityError: UNIQUE constraint failed: users.telegram_id
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiogram\dispatcher\dispatcher.py", line 309, in _process_update
+    response = await self.feed_update(bot, update, **kwargs)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiogram\dispatcher\dispatcher.py", line 158, in feed_update
+    response = await self.update.wrap_outer_middleware(
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiogram\dispatcher\middlewares\error.py", line 25, in __call__
+    return await handler(event, data)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiogram\dispatcher\middlewares\user_context.py", line 56, in __call__
+    return await handler(event, data)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiogram\fsm\middleware.py", line 42, in __call__
+    return await handler(event, data)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiogram\dispatcher\event\telegram.py", line 121, in trigger
+    return await wrapped_inner(event, kwargs)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiogram\dispatcher\event\handler.py", line 43, in call
+    return await wrapped()
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiogram\dispatcher\dispatcher.py", line 276, in _listen_update
+    return await self.propagate_event(update_type=update_type, event=event, **kwargs)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiogram\dispatcher\router.py", line 146, in propagate_event
+    return await observer.wrap_outer_middleware(_wrapped, event=event, data=kwargs)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiogram\dispatcher\router.py", line 141, in _wrapped
+    return await self._propagate_event(
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiogram\dispatcher\router.py", line 174, in _propagate_event
+    response = await router.propagate_event(update_type=update_type, event=event, **kwargs)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiogram\dispatcher\router.py", line 146, in propagate_event
+    return await observer.wrap_outer_middleware(_wrapped, event=event, data=kwargs)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiogram\dispatcher\router.py", line 141, in _wrapped
+    return await self._propagate_event(
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiogram\dispatcher\router.py", line 166, in _propagate_event
+    response = await observer.trigger(event, **kwargs)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiogram\dispatcher\event\telegram.py", line 121, in trigger
+    return await wrapped_inner(event, kwargs)
+  File "D:\IT_DARSLAR\Bot\tg_adbot_v2\app\middlewares\subscription.py", line 26, in __call__
+    return await handler(event, data)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiogram\dispatcher\event\handler.py", line 43, in call
+    return await wrapped()
+  File "D:\IT_DARSLAR\Bot\tg_adbot_v2\app\handlers\start.py", line 36, in cmd_start
+    user = await get_or_create_user(
+  File "D:\IT_DARSLAR\Bot\tg_adbot_v2\app\database.py", line 171, in get_or_create_user
+    user = await create_user(telegram_id, username, full_name)
+  File "D:\IT_DARSLAR\Bot\tg_adbot_v2\app\database.py", line 163, in create_user
+    await session.commit()
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\ext\asyncio\session.py", line 1009, in commit
+    await greenlet_spawn(self.sync_session.commit)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 2028, in commit
+    trans.commit(_to_root=True)
+  File "<string>", line 2, in commit
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 1313, in commit
+    self._prepare_impl()
+  File "<string>", line 2, in _prepare_impl
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 1288, in _prepare_impl
+    self.session.flush()
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 4352, in flush
+    self._flush(objects)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 4487, in _flush
+    with util.safe_reraise():
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\util\langhelpers.py", line 146, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 4448, in _flush
+    flush_context.execute()
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\persistence.py", line 1233, in _emit_insert_statements
+    result = connection.execute(
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1418, in execute
+    return meth(
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\elements.py", line 515, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1640, in _execute_clauseelement
+    ret = self._execute_context(
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\default.py", line 941, in do_execute
+    cursor.execute(statement, parameters)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\dialects\sqlite\aiosqlite.py", line 147, in execute
+    self._adapt_connection._handle_exception(error)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\dialects\sqlite\aiosqlite.py", line 298, in _handle_exception
+    raise error
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\dialects\sqlite\aiosqlite.py", line 129, in execute
+    self.await_(_cursor.execute(operation, parameters))
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiosqlite\cursor.py", line 48, in execute
+    await self._execute(self._cursor.execute, sql, parameters)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiosqlite\cursor.py", line 40, in _execute
+    return await self._conn._execute(fn, *args, **kwargs)
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiosqlite\core.py", line 132, in _execute
+    return await future
+  File "C:\Users\rozim\AppData\Local\Programs\Python\Python310\lib\site-packages\aiosqlite\core.py", line 115, in run
+    result = function()
+sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: users.telegram_id
+[SQL: INSERT INTO users (telegram_id, username, full_name, is_admin, is_banned, is_active, created_at, phone_number, session_string) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: (8946105454, 'akramjonov7777', 'Akramjonov', 1, 0, 0, '2026-06-15 05:26:25.115377', None, None)]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2026-06-15 10:26:25 | INFO     | aiogram.event | Update id=868602174 is handled. Duration 483 ms by bot id=8630135525
+2026-06-15 10:27:02 | INFO     | aiogram.event | Update id=868602175 is handled. Duration 969 ms by bot id=8630135525
+2026-06-15 10:27:07 | INFO     | aiogram.event | Update id=868602176 is handled. Duration 530 ms by bot id=8630135525
+2026-06-15 10:27:14 | INFO     | aiogram.event | Update id=868602177 is handled. Duration 452 ms by bot id=8630135525
+2026-06-15 10:27:16 | INFO     | aiogram.event | Update id=868602178 is not handled. Duration 63 ms by bot id=8630135525
+2026-06-15 10:27:23 | INFO     | aiogram.event | Update id=868602179 is not handled. Duration 77 ms by bot id=8630135525
+2026-06-15 10:27:26 | INFO     | aiogram.event | Update id=868602180 is not handled. Duration 78 ms by bot id=8630135525
+2026-06-15 10:27:27 | INFO     | aiogram.event | Update id=868602181 is not handled. Duration 63 ms by bot id=8630135525
+2026-06-15 10:27:30 | INFO     | aiogram.event | Update id=868602182 is handled. Duration 672 ms by bot id=8630135525
+2026-06-15 10:27:32 | INFO     | aiogram.event | Update id=868602183 is not handled. Duration 62 ms by bot id=8630135525
+2026-06-15 10:27:36 | INFO     | aiogram.dispatcher | Polling stopped for bot @habarchiTaxi_bot id=8630135525 - 'AUTO ELON BOT'
+2026-06-15 10:27:36 | INFO     | aiogram.dispatcher | Polling stopped
+2026-06-15 10:27:36 | INFO     | __main__ | 🛑 Bot to'xtatildi.
+2026-06-15 10:27:36 | INFO     | __main__ | Foydalanuvchi tomonidan to'xtatildi.
