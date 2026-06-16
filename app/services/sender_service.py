@@ -14,35 +14,29 @@ logger = logging.getLogger(__name__)
 # Aktiv yuborish tasklari: {user_db_id: asyncio.Task}
 _sending_tasks: Dict[int, asyncio.Task] = {}
 
-# Guruhlar orasidagi kutish (spam himoyasi uchun sekundda)
-DELAY_BETWEEN_GROUPS = 8  # har bir guruh orasida 8 soniya
+# Guruhlar orasidagi kutish (spam himoyasi)
+DELAY_BETWEEN_GROUPS = 8
 
 
 async def start_sending(bot, user_db_id: int, telegram_id: int, session_string: str):
-    """Foydalanuvchi uchun yuborish siklini boshlash."""
-    if user_db_id in _sending_tasks:
-        task = _sending_tasks[user_db_id]
-        if not task.done():
-            return
-
-    task = asyncio.create_task(
+    task = _sending_tasks.get(user_db_id)
+    if task and not task.done():
+        return
+    _sending_tasks[user_db_id] = asyncio.create_task(
         _sending_loop(bot, user_db_id, telegram_id, session_string),
         name=f"send_{user_db_id}"
     )
-    _sending_tasks[user_db_id] = task
 
 
 async def stop_sending(user_db_id: int):
-    """Foydalanuvchi uchun yuborish siklini to'xtatish."""
-    if user_db_id in _sending_tasks:
-        task = _sending_tasks[user_db_id]
-        if not task.done():
-            task.cancel()
-            try:
-                await asyncio.wait_for(asyncio.shield(task), timeout=3)
-            except (asyncio.CancelledError, asyncio.TimeoutError):
-                pass
-        del _sending_tasks[user_db_id]
+    task = _sending_tasks.get(user_db_id)
+    if task and not task.done():
+        task.cancel()
+        try:
+            await asyncio.wait_for(asyncio.shield(task), timeout=5)
+        except (asyncio.CancelledError, asyncio.TimeoutError):
+            pass
+    _sending_tasks.pop(user_db_id, None)  # ← KeyError bo'lmaydi
     await update_settings(user_db_id, is_sending=False, sending_paused=False)
 
 
@@ -55,88 +49,134 @@ async def resume_sending(user_db_id: int):
 
 
 def is_sending(user_db_id: int) -> bool:
-    if user_db_id not in _sending_tasks:
-        return False
-    return not _sending_tasks[user_db_id].done()
+    task = _sending_tasks.get(user_db_id)
+    return task is not None and not task.done()
 
 
 async def stop_all_for_user(user_db_id: int):
-    """Admin tomonidan majburiy to'xtatish."""
     await stop_sending(user_db_id)
+
+
+async def _send_to_entity(client_session: str, user_db_id: int, entity, text: str):
+    """
+    Guruh yoki kanalga xabar yuborish.
+    Telethon send_message barcha turdagi entity larni qabul qiladi:
+    guruh, supergroup, kanal — farqi yo'q.
+    """
+    from app.services.telethon_service import get_client
+    client = await get_client(user_db_id, client_session)
+    if not client:
+        return False, "Mijoz ulanmagan"
+
+    from telethon import errors
+    for attempt in range(3):
+        try:
+            await client.send_message(entity, text)
+            return True, ""
+
+        except errors.FloodWaitError as e:
+            wait = e.seconds
+            logger.warning(f"FloodWait {wait}s — foydalanuvchi {user_db_id}, entity {entity}")
+            if wait > 300:
+                return False, f"FloodWait: {wait}s (juda uzoq)"
+            await asyncio.sleep(wait + 3)
+
+        except errors.ChatWriteForbiddenError:
+            return False, "Yozish taqiqlangan"
+
+        except errors.UserBannedInChannelError:
+            return False, "Kanalda bloklangan"
+
+        except errors.SlowModeWaitError as e:
+            return False, f"SlowMode: {e.seconds}s"
+
+        except errors.ChannelPrivateError:
+            return False, "Kanal/guruh yopiq yoki chiqib ketilgan"
+
+        except errors.RPCError as e:
+            logger.warning(f"RPCError (urinish {attempt+1}/3): {e}")
+            if attempt == 2:
+                return False, str(e)
+            await asyncio.sleep(5)
+
+        except Exception as e:
+            logger.error(f"Kutilmagan xato: {e}")
+            return False, str(e)
+
+    return False, "3 ta urinishdan keyin ham xato"
 
 
 async def _sending_loop(bot, user_db_id: int, telegram_id: int, session_string: str):
     """
-    Asosiy yuborish sikli.
-
-    Mantiq:
-    1. Barcha tanlangan guruplarga birin-ketin xabar yuboriladi (guruhlar orasida DELAY_BETWEEN_GROUPS soniya kutiladi)
-    2. HAMMA guruhlarga yuborib bo'lgandan keyin interval_minutes kutiladi
-    3. Keyin yana boshidan takrorlanadi
+    Asosiy yuborish sikli:
+    1. Barcha guruh/kanallarga ketma-ket yuborish (8s pauza)
+    2. Hammaga yuborib bo'lgach → interval kutish
+    3. Takrorlash ♻️
     """
     logger.info(f"Yuborish sikli boshlandi: foydalanuvchi {user_db_id}")
     await update_settings(user_db_id, is_sending=True, sending_paused=False)
 
     try:
         while True:
+            # ── Sozlamalarni olish ────────────────────────────────────────────
             settings = await get_or_create_settings(user_db_id)
 
-            # Pauza holatini tekshirish
             if settings.sending_paused:
                 await asyncio.sleep(3)
                 continue
 
-            # Joriy e'lonni olish
+            # ── E'lonni olish ─────────────────────────────────────────────────
             ad = await get_active_advertisement(user_db_id)
             if not ad:
-                logger.warning(f"Foydalanuvchi {user_db_id} uchun e'lon topilmadi, 30 soniya kutilmoqda")
+                logger.warning(f"[{user_db_id}] E'lon topilmadi, 30s kutilmoqda")
                 await asyncio.sleep(30)
                 continue
 
-            # Joriy guruhlarni olish
+            # ── Guruh/kanallarni olish ────────────────────────────────────────
             groups = await get_user_groups(user_db_id)
             if not groups:
-                logger.warning(f"Foydalanuvchi {user_db_id} uchun guruhlar topilmadi, 30 soniya kutilmoqda")
+                logger.warning(f"[{user_db_id}] Guruhlar topilmadi, 30s kutilmoqda")
                 await asyncio.sleep(30)
                 continue
 
             interval_minutes = settings.interval_minutes or 10
-            total_groups = len(groups)
-
-            logger.info(
-                f"Foydalanuvchi {user_db_id}: {total_groups} ta guruhga yuborilmoqda, "
-                f"interval={interval_minutes} daqiqa, guruhlar orasida {DELAY_BETWEEN_GROUPS}s kutish"
-            )
-
+            total = len(groups)
             sent_count = 0
             failed_count = 0
 
-            # ── Hamma guruplarga ketma-ket yuborish ──────────────────────────
+            logger.info(
+                f"[{user_db_id}] {total} ta guruh/kanalga yuborilmoqda | "
+                f"interval={interval_minutes}daq | orasida {DELAY_BETWEEN_GROUPS}s"
+            )
+
+            # ── Hammaga ketma-ket yuborish ────────────────────────────────────
             for idx, group in enumerate(groups, 1):
 
-                # Har bir guruhdan oldin pauza/to'xtatishni tekshirish
+                # Pauza tekshiruvi
                 settings = await get_or_create_settings(user_db_id)
                 if settings.sending_paused:
-                    logger.info(f"Foydalanuvchi {user_db_id}: pauza qilindi ({idx}/{total_groups})")
+                    logger.info(f"[{user_db_id}] Pauza ({idx}/{total})")
                     while True:
                         await asyncio.sleep(3)
                         settings = await get_or_create_settings(user_db_id)
                         if not settings.sending_paused:
-                            logger.info(f"Foydalanuvchi {user_db_id}: davom ettirildi")
+                            logger.info(f"[{user_db_id}] Davom ettirildi")
                             break
 
-                # E'lon o'zgargan bo'lishi mumkin — yangilab olamiz
+                # E'lon yangilangan bo'lishi mumkin
                 ad = await get_active_advertisement(user_db_id)
                 if not ad:
+                    logger.warning(f"[{user_db_id}] E'lon o'chirildi, sikl to'xtatildi")
                     break
 
-                # Xabar yuborish
-                success, error_msg = await send_message_to_group(
+                # Entity aniqlash: username bo'lsa ishlatamiz, bo'lmasa ID
+                entity = group.group_username if group.group_username else int(group.group_id)
+
+                success, error_msg = await _send_to_entity(
+                    client_session=session_string,
                     user_db_id=user_db_id,
-                    session_string=session_string,
-                    group_id=group.group_id,
+                    entity=entity,
                     text=ad.text,
-                    group_username=group.group_username,
                 )
 
                 await add_send_stat(
@@ -149,35 +189,29 @@ async def _sending_loop(bot, user_db_id: int, telegram_id: int, session_string: 
 
                 if success:
                     sent_count += 1
-                    logger.info(f"✅ [{idx}/{total_groups}] {group.group_title} — foydalanuvchi {user_db_id}")
+                    logger.info(f"✅ [{idx}/{total}] {group.group_title}")
                 else:
                     failed_count += 1
-                    logger.warning(f"❌ [{idx}/{total_groups}] {group.group_title}: {error_msg}")
+                    logger.warning(f"❌ [{idx}/{total}] {group.group_title}: {error_msg}")
 
                 # Oxirgi guruhdan keyin kutmaslik
-                if idx < total_groups:
+                if idx < total:
                     await asyncio.sleep(DELAY_BETWEEN_GROUPS)
 
-            # ── Bir sikl tugadi ───────────────────────────────────────────────
+            # ── Sikl tugadi ───────────────────────────────────────────────────
             logger.info(
-                f"Foydalanuvchi {user_db_id}: sikl tugadi. "
-                f"✅{sent_count} ❌{failed_count}. "
-                f"Keyingi sikl {interval_minutes} daqiqadan keyin."
+                f"[{user_db_id}] Sikl tugadi → ✅{sent_count} ❌{failed_count} | "
+                f"Keyingisi {interval_minutes} daqiqadan keyin"
             )
 
-            # Foydalanuvchiga statistika yuborish (ixtiyoriy — har 5 siklda 1 ta)
-            # (Spam bo'lmasin deb o'chirib qo'yilgan, kerak bo'lsa yoqiladi)
-
-            # Intervalning to'liq vaqtini kutish
             await asyncio.sleep(interval_minutes * 60)
 
     except asyncio.CancelledError:
-        logger.info(f"Yuborish sikli bekor qilindi: foydalanuvchi {user_db_id}")
+        logger.info(f"[{user_db_id}] Yuborish bekor qilindi")
         raise
     except Exception as e:
-        logger.error(f"Yuborish sikli xatosi foydalanuvchi {user_db_id}: {e}", exc_info=True)
+        logger.error(f"[{user_db_id}] Yuborish xatosi: {e}", exc_info=True)
     finally:
         await update_settings(user_db_id, is_sending=False, sending_paused=False)
-        if user_db_id in _sending_tasks:
-            del _sending_tasks[user_db_id]
-        logger.info(f"Yuborish sikli tugatildi: foydalanuvchi {user_db_id}")
+        _sending_tasks.pop(user_db_id, None)  # ← KeyError bo'lmaydi
+        logger.info(f"[{user_db_id}] Yuborish sikli tugatildi")
