@@ -179,7 +179,8 @@ async def _process_phone(message: Message, state: FSMContext, phone: str):
         await state.update_data(phone=phone)
         await state.set_state(PhoneFlow.entering_code)
 
-        await loading_msg.edit_text(
+        # ← ReplyKeyboardMarkup ishlatamiz, edit_text EMAS
+        await message.answer(
             "✅ <b>Tasdiqlash kodi yuborildi!</b>\n\n"
             f"📱 Raqam: <code>{phone}</code>\n\n"
             "📝 Kodni quyidagi formatda kiriting:\n"
@@ -189,9 +190,10 @@ async def _process_phone(message: Message, state: FSMContext, phone: str):
             parse_mode="HTML",
             reply_markup=kb_cancel()
         )
+
     except Exception as e:
         logger.error(f"Kod yuborishda xato {phone}: {e}")
-        await loading_msg.edit_text(
+        await message.answer(
             f"❌ <b>Kod yuborib bo'lmadi</b>\n\n"
             f"Xato: <code>{str(e)[:200]}</code>\n\n"
             "Raqamni tekshirib qayta urinib ko'ring.",
