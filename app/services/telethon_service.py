@@ -5,8 +5,7 @@ from typing import Optional, List, Dict
 
 from telethon import TelegramClient, errors
 from telethon.tl.types import (
-    DialogFilter, InputPeerChannel, InputPeerChat,
-    Channel, Chat, User as TLUser
+    DialogFilter, Channel, Chat
 )
 from telethon.sessions import StringSession
 
@@ -14,20 +13,25 @@ from config import config
 
 logger = logging.getLogger(__name__)
 
-# Active client pool
 _clients: Dict[int, TelegramClient] = {}
 
 
-def _get_session_path(user_db_id: int) -> str:
-    return os.path.join(config.SESSIONS_DIR, f"user_{user_db_id}")
+def _get_proxy():
+    """Proxy sozlamasini qaytaradi."""
+    host = getattr(config, "PROXY_HOST", "") or ""
+    port = getattr(config, "PROXY_PORT", 0) or 0
+    if host and port:
+        return ("socks5", host, int(port))
+    return None
 
 
 async def create_client(user_db_id: int, session_string: str = None) -> TelegramClient:
-    """Create a Telethon client for a user."""
     if session_string:
         session = StringSession(session_string)
     else:
         session = StringSession()
+
+    proxy = _get_proxy()
 
     client = TelegramClient(
         session,
@@ -38,6 +42,7 @@ async def create_client(user_db_id: int, session_string: str = None) -> Telegram
         app_version="Telegram Desktop",
         lang_code="en",
         system_lang_code="en-US",
+        proxy=proxy,
     )
     return client
 
